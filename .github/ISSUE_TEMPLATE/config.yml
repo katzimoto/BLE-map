@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Private security report
+    url: https://github.com/katzimoto/BLE-map/security/advisories/new
+    about: Report security or privacy concerns privately.
