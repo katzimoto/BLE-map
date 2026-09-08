@@ -1,0 +1,296 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "schema_version",
+    "synthetic",
+    "id",
+    "label",
+    "generator",
+    "receivers",
+    "beacons",
+    "variants",
+    "events"
+  ],
+  "properties": {
+    "kind": {
+      "const": "synthetic-ble-fixture"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "synthetic": {
+      "const": true
+    },
+    "id": {
+      "enum": [
+        "triangle",
+        "clock-drift",
+        "collinear",
+        "sparse",
+        "weak-fit"
+      ]
+    },
+    "label": {
+      "type": "string",
+      "maxLength": 80
+    },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "seed",
+        "duration_ms",
+        "step_ms"
+      ],
+      "properties": {
+        "name": {
+          "const": "ble-map-synthetic"
+        },
+        "version": {
+          "const": 1
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "duration_ms": {
+          "const": 48000
+        },
+        "step_ms": {
+          "const": 200
+        }
+      }
+    },
+    "receivers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "x_m",
+          "y_m",
+          "offset_ms",
+          "drift_ppm",
+          "calibration"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^example-receiver-[a-c]$",
+            "maxLength": 80
+          },
+          "label": {
+            "type": "string",
+            "pattern": "^Example Receiver [A-C]$",
+            "maxLength": 80
+          },
+          "x_m": {
+            "type": "number",
+            "minimum": -100,
+            "maximum": 100
+          },
+          "y_m": {
+            "type": "number",
+            "minimum": -100,
+            "maximum": 100
+          },
+          "offset_ms": {
+            "type": "integer",
+            "minimum": -1000,
+            "maximum": 1000
+          },
+          "drift_ppm": {
+            "type": "integer",
+            "minimum": -500,
+            "maximum": 500
+          },
+          "calibration": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "distance_m",
+                "rssi"
+              ],
+              "properties": {
+                "distance_m": {
+                  "type": "number",
+                  "minimum": 1,
+                  "maximum": 100
+                },
+                "rssi": {
+                  "type": "integer",
+                  "minimum": -127,
+                  "maximum": 20
+                }
+              }
+            },
+            "minItems": 6,
+            "maxItems": 100
+          }
+        }
+      },
+      "minItems": 2,
+      "maxItems": 3
+    },
+    "beacons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "x_m",
+          "y_m",
+          "rotation_group"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^synthetic-beacon-00[1-7]$",
+            "maxLength": 80
+          },
+          "label": {
+            "type": "string",
+            "pattern": "^Synthetic Beacon 00[1-7]$",
+            "maxLength": 80
+          },
+          "x_m": {
+            "type": "number",
+            "minimum": -100,
+            "maximum": 100
+          },
+          "y_m": {
+            "type": "number",
+            "minimum": -100,
+            "maximum": 100
+          },
+          "rotation_group": {
+            "enum": [
+              null,
+              "simulated-rotation"
+            ]
+          }
+        }
+      },
+      "minItems": 7,
+      "maxItems": 7
+    },
+    "variants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "bytes",
+          "malformed_ad",
+          "extended_or_concatenated"
+        ],
+        "properties": {
+          "bytes": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "minItems": 1,
+            "maxItems": 62
+          },
+          "malformed_ad": {
+            "type": "boolean"
+          },
+          "extended_or_concatenated": {
+            "type": "boolean"
+          }
+        }
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "events": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "t",
+        "rssi",
+        "beacon",
+        "receiver",
+        "counter_ms",
+        "variant"
+      ],
+      "properties": {
+        "t": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 48000
+          },
+          "minItems": 1,
+          "maxItems": 50000
+        },
+        "rssi": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": -127,
+            "maximum": 20
+          },
+          "minItems": 1,
+          "maxItems": 50000
+        },
+        "beacon": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6
+          },
+          "minItems": 1,
+          "maxItems": 50000
+        },
+        "receiver": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "minItems": 1,
+          "maxItems": 50000
+        },
+        "counter_ms": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": -1000,
+            "maximum": 49000
+          },
+          "minItems": 1,
+          "maxItems": 50000
+        },
+        "variant": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "minItems": 1,
+          "maxItems": 50000
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,17 @@
+node_modules
+dist/
+review-output/
+playwright-report/
+test-results/
+.venv/
+__pycache__/
+*.pyc
+*.tsbuildinfo
+.env*
+*.sqlite*
+*.csv
+*.xlsx
+*.key
+*.pem
+.DS_Store
+.ruff_cache/
