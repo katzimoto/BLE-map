@@ -9,6 +9,13 @@ async function ready(page: Page) {
     page.getByRole("button", { name: "Synthetic Beacon 001", exact: false }),
   ).toBeVisible();
   await expect(page.locator("canvas")).toBeVisible();
+  await expect
+    .poll(
+      async () =>
+        page.evaluate(() => window.__SYNTHETIC_LAB__?.active.length ?? 0),
+      { timeout: 15000 },
+    )
+    .toBeGreaterThan(0);
 }
 function difference(a: Buffer, b?: Buffer) {
   const x = PNG.sync.read(a),

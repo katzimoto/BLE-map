@@ -66,6 +66,7 @@ function Instrument({
   }, []);
   useEffect(() => {
     const unsub = useUI.subscribe(() => invalidate());
+    invalidate();
     let pointer: { x: number; y: number } | null = null;
     const down = (e: PointerEvent) => {
       pointer = { x: e.clientX, y: e.clientY };

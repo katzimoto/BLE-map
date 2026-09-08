@@ -57,6 +57,10 @@ class PrivacyTests(unittest.TestCase):
         self.assertIn("bluetooth-address", text_findings(address))
         self.assertIn("observation-short-id", text_findings("Device " + "A" * 4))
 
+    def test_generic_capture_names(self):
+        for name in ["capture-" + "log-012.json", "raw_" + "capture_data.csv"]:
+            self.assertIn("capture-filename", text_findings(name))
+
     def test_contact_and_network_formats(self):
         self.assertIn("email", text_findings("invented" + "@" + "example.invalid"))
         self.assertIn("non-reserved-ip", text_findings(".".join(["8"] * 4)))

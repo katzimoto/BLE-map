@@ -34,7 +34,7 @@ RESERVED = tuple(
 RULES = {
     "bluetooth-address": r"(?i)(?<![0-9a-f])(?:[0-9a-f]{2}:){5}[0-9a-f]{2}(?![0-9a-f])",
     "observation-short-id": r"\bDevice [A-F0-9]{4,12}\b",
-    "capture-filename": r'\bble_log_\d[^\s"<>]*|\blive_sniffed_data[^\s"<>]*',
+    "capture-filename": r"\b(?:bluetooth|ble|capture|sniff)[_-](?:log[_-])?\d+\.(?:csv|json|xlsx)|\b(?:raw|live)[_-](?:capture|sniffed|observations)[_-](?:data|log)(?:[_-][a-z]+)?\.(?:csv|tsv|json|xlsx)",
     "email": r"[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}",
     "phone": r"(?<![\w.])\+?\d[\d ()-]{8,}\d(?![\w.])",
     "ssh-instruction": r"\bssh\s+(?:-\w|[\w.-]+@)|\bscp\s+-|\bsshpass\b",

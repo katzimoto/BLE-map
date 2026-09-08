@@ -51,7 +51,7 @@ Nothing in this project is a measured real-world observation. “Raw” always m
 | Core and reference arcs                                                      | Assigned                          | Receiver origin and dBm references, not coverage volumes                         |
 | Reception line and pulse                                                     | Derived visual                    | A simulated reception, not a connection                                          |
 | Fade/visibility                                                              | Derived                           | Full through 2 seconds of inactivity, absent at 8 seconds                        |
-| White selection/rim                                                          | Assigned/derived                  | Selected address or an out-of-bounds RSSI indication                             |
+| White selection/rim                                                          | Assigned/derived                  | Selected address; fixtures reject out-of-bounds RSSI                             |
 | Conditional distance interval                                                | Derived                           | Inversion of the calibrated prediction band                                      |
 | XY estimate and sensitivity circle                                           | Derived                           | Conditional model fit and local metric sensitivity; no confidence-coverage claim |
 | Project view, receiver edits, selection, replay time, tau, correction switch | Assigned                          | Local user choices; cannot modify fixture observations                           |
