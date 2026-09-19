@@ -117,8 +117,7 @@ export async function listFloorPlanImages(): Promise<FloorPlanImage[]> {
             (a, b) => b.captured_at - a.captured_at,
           ),
         );
-      r.onerror = () =>
-        reject(new Error("Floor-plan image list failed."));
+      r.onerror = () => reject(new Error("Floor-plan image list failed."));
     });
   } finally {
     db.close();
@@ -173,8 +172,9 @@ function database(): Promise<IDBDatabase> {
       // v1 schema used objectStore "projects" with key "current"
       // v2 migrates "projects" → "captures" keyed by fixture id
       if (db.objectStoreNames.contains("projects")) {
-        const projectsStore =
-          db.transaction("projects", "readonly").objectStore("projects");
+        const projectsStore = db
+          .transaction("projects", "readonly")
+          .objectStore("projects");
         const currentReq = projectsStore.get("current");
         currentReq.onsuccess = () => {
           if (currentReq.result) {

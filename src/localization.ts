@@ -48,7 +48,7 @@ export function calibrate(samples: Sample[]): Model {
 export function distanceInterval(rssi: number, m: Model) {
   const beta = -10 * m.exponent;
   const delta = rssi - (m.reference + beta * m.mean);
-  const h2 = ((m.t * m.sigma) ** 2) * (1 + 1 / m.n);
+  const h2 = (m.t * m.sigma) ** 2 * (1 + 1 / m.n);
   const a = beta * beta - h2 / m.sxx;
   const b = -2 * beta * delta;
   const c = delta * delta - h2;
@@ -164,10 +164,15 @@ export function locate(
 
   // Gauss–Newton refinement with backtracking line search
   const currentCost = costAt(best.x, best.y, evidence);
-  let xx = 0, xy = 0, yy = 0;
+  let xx = 0,
+    xy = 0,
+    yy = 0;
   for (let iter = 0; iter < 80; iter++) {
-    let gx = 0, gy = 0;
-    xx = 0; xy = 0; yy = 0;
+    let gx = 0,
+      gy = 0;
+    xx = 0;
+    xy = 0;
+    yy = 0;
     for (const e of evidence) {
       const dx = best.x - e.r.x_m,
         dy = best.y - e.r.y_m,
@@ -196,7 +201,10 @@ export function locate(
       stepY = gy / yy;
     let rate = 1;
     for (let k = 0; k < 16; k++, rate /= 2) {
-      if (costAt(best.x - rate * stepX, best.y - rate * stepY, evidence) < currentCost) {
+      if (
+        costAt(best.x - rate * stepX, best.y - rate * stepY, evidence) <
+        currentCost
+      ) {
         best = {
           x: best.x - rate * stepX,
           y: best.y - rate * stepY,
@@ -208,7 +216,8 @@ export function locate(
     if (rate === 0) break; // no improvement found
   }
 
-  const sensitivity = 1 / Math.sqrt((xx + yy - Math.hypot(xx - yy, 2 * xy)) / 2);
+  const sensitivity =
+    1 / Math.sqrt((xx + yy - Math.hypot(xx - yy, 2 * xy)) / 2);
   if (!Number.isFinite(sensitivity) || sensitivity <= 0)
     return no("Position sensitivity is unresolved: no fix.");
   return {

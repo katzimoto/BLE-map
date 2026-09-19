@@ -145,7 +145,10 @@ export function visibleBeaconIndices(
   screenWidth: number,
   screenHeight: number,
 ): number[] {
-  const { position: [cx, cy, cz], fov } = camera;
+  const {
+    position: [cx, cy, cz],
+    fov,
+  } = camera;
   const fovRad = (fov * Math.PI) / 180;
   const halfH = Math.tan(fovRad / 2);
   const halfW = halfH * (screenWidth / screenHeight);
@@ -156,9 +159,13 @@ export function visibleBeaconIndices(
     const dir = direction(i);
     const r = radius(values[i]!.smooth).r;
     // World position of beacon
-    const wx = dir[0] * r, wy = dir[1] * r, wz = dir[2] * r;
+    const wx = dir[0] * r,
+      wy = dir[1] * r,
+      wz = dir[2] * r;
     // Vector from camera to beacon
-    const dx = wx - cx, dy = wy - cy, dz = wz - cz;
+    const dx = wx - cx,
+      dy = wy - cy,
+      dz = wz - cz;
     // Depth along camera forward axis (positive = in front)
     const _depth = dx * 0 + dy * 0 + dz * 0; // dot with camera forward (0,1,0) for this scene
     // For this top-down-ish view, camera forward ≈ (0,1,0) adjusted by elevation
@@ -182,7 +189,12 @@ export function visibleBeaconIndices(
 
     // Check if within screen bounds (with margin for beacon glyph radius)
     const margin = 20;
-    if (sx < -margin || sx > screenWidth + margin || sy < -margin || sy > screenHeight + margin)
+    if (
+      sx < -margin ||
+      sx > screenWidth + margin ||
+      sy < -margin ||
+      sy > screenHeight + margin
+    )
       return visible;
 
     visible.push(i);
@@ -197,7 +209,10 @@ export function visibleBeaconIndices(
  * @param totalPoints Total number of data points
  * @param numChunks Desired number of chunks (default: 4)
  */
-export function chunkBounds(totalPoints: number, numChunks = 4): Array<{ start: number; end: number }> {
+export function chunkBounds(
+  totalPoints: number,
+  numChunks = 4,
+): Array<{ start: number; end: number }> {
   const chunkSize = Math.ceil(totalPoints / numChunks);
   const bounds: Array<{ start: number; end: number }> = [];
   for (let i = 0; i < totalPoints; i += chunkSize) {
@@ -214,13 +229,24 @@ export function chunkBounds(totalPoints: number, numChunks = 4): Array<{ start: 
 export function projectedBounds(
   index: number,
   smoothRssi: number,
-  camera: { position: [number, number, number]; fov: number; size: { width: number; height: number } },
+  camera: {
+    position: [number, number, number];
+    fov: number;
+    size: { width: number; height: number };
+  },
 ): { x: number; y: number; radius: number } | null {
   const dir = direction(index);
   const r = radius(smoothRssi).r;
-  const { position: [cx, cy, cz], size: { width, height } } = camera;
-  const wx = dir[0] * r, wy = dir[1] * r, wz = dir[2] * r;
-  const dx = wx - cx, dy = wy - cy, dz = wz - cz;
+  const {
+    position: [cx, cy, cz],
+    size: { width, height },
+  } = camera;
+  const wx = dir[0] * r,
+    wy = dir[1] * r,
+    wz = dir[2] * r;
+  const dx = wx - cx,
+    dy = wy - cy,
+    dz = wz - cz;
   if (dz <= 0) return null;
 
   const fovRad = (camera.fov * Math.PI) / 180;
@@ -236,7 +262,10 @@ export function projectedBounds(
 
   // Approximate screen-space radius of the glyph
   const approxWorldSize = 0.3;
-  const screenRadius = Math.max(2, (approxWorldSize / dz) * (height / (2 * halfH)));
+  const screenRadius = Math.max(
+    2,
+    (approxWorldSize / dz) * (height / (2 * halfH)),
+  );
 
   return { x: sx, y: sy, radius: screenRadius };
 }

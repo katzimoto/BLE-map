@@ -9,7 +9,15 @@ import {
   canonical,
 } from "./data";
 import type { Fixture, Manifest, Project } from "./data";
-import { direction, ema, opacity, radius, observations, outer, smoothed } from "./signal";
+import {
+  direction,
+  ema,
+  opacity,
+  radius,
+  observations,
+  outer,
+  smoothed,
+} from "./signal";
 import {
   calibrate,
   correctCounter,
@@ -90,7 +98,13 @@ describe("signal semantics", () => {
     expect(opacity(8000)).toBe(0);
   });
   it("LRU cache evicts oldest session after MAX_SESSIONS entries", () => {
-    const ids = ["triangle", "clock-drift", "collinear", "sparse", "weak-fit"] as const;
+    const ids = [
+      "triangle",
+      "clock-drift",
+      "collinear",
+      "sparse",
+      "weak-fit",
+    ] as const;
     const sessions = Array.from({ length: 9 }, (_, i) =>
       hydrate(fixture(ids[i % 5])),
     );

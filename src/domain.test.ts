@@ -55,7 +55,11 @@ describe("domain model v2 — issue #17 [M1]", () => {
         channel: 37,
         payload: null,
         seq: null,
-        provenance: { type: "synthetic", generator: "ble-map-fixture", seed: 42 },
+        provenance: {
+          type: "synthetic",
+          generator: "ble-map-fixture",
+          seed: 42,
+        },
         timestamp_uncertainty_ms: null,
       };
       expect(obs.payload).toBeNull();
@@ -161,7 +165,10 @@ describe("domain model v2 — issue #17 [M1]", () => {
               algorithm_version: "1.0.0",
               evidence_fingerprint: null,
             },
-            window: { oldest_ms: 1_699_999_800_000, newest_ms: 1_700_000_000_000 },
+            window: {
+              oldest_ms: 1_699_999_800_000,
+              newest_ms: 1_700_000_000_000,
+            },
             active: true,
           },
         ],
@@ -284,7 +291,8 @@ describe("domain model v2 — issue #17 [M1]", () => {
         algorithm_version: "1.0.0",
         validity: {
           valid: false,
-          reason: "Input fingerprint mismatch: calibration samples have changed",
+          reason:
+            "Input fingerprint mismatch: calibration samples have changed",
           validated_against_fingerprint: "current-fingerprint",
           max_age_ms: null,
         },

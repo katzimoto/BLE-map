@@ -130,13 +130,15 @@ async function observationsChunked(
   time: number,
   receiverIdx: number,
   tau: number,
-): Promise<Array<{
-  index: number;
-  raw: number;
-  smooth: number;
-  age: number;
-  alpha: number;
-} | null>> {
+): Promise<
+  Array<{
+    index: number;
+    raw: number;
+    smooth: number;
+    age: number;
+    alpha: number;
+  } | null>
+> {
   const result: Array<{
     index: number;
     raw: number;
@@ -157,11 +159,7 @@ async function observationsChunked(
     }
     // lo-1 is the last valid index
     let p = lo - 1;
-    while (
-      p >= 0 &&
-      (t[ix[p]] > time || receiver[ix[p]] !== receiverIdx)
-    )
-      p--;
+    while (p >= 0 && (t[ix[p]] > time || receiver[ix[p]] !== receiverIdx)) p--;
     if (p < 0) {
       result[b] = null;
       continue;
@@ -170,7 +168,8 @@ async function observationsChunked(
     const age = time - t[i];
 
     // opacity: 1 if age < 2000ms, linear fade to 0 at 8000ms
-    const alpha = age < 0 || age >= 8000 ? 0 : age <= 2000 ? 1 : 1 - (age - 2000) / 6000;
+    const alpha =
+      age < 0 || age >= 8000 ? 0 : age <= 2000 ? 1 : 1 - (age - 2000) / 6000;
 
     result[b] = {
       index: i,
@@ -221,9 +220,12 @@ self.onmessage = async (e: MessageEvent) => {
           key,
         );
         // Transfer the buffer to avoid a copy on the main thread
-        self.postMessage({ id, result: { values: Array.from(values) } }, {
-          transfer: [values.buffer],
-        });
+        self.postMessage(
+          { id, result: { values: Array.from(values) } },
+          {
+            transfer: [values.buffer],
+          },
+        );
         break;
       }
 

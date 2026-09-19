@@ -3,7 +3,12 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { Session } from "./data";
-import { direction, observations, radius, visibleBeaconIndices } from "./signal";
+import {
+  direction,
+  observations,
+  radius,
+  visibleBeaconIndices,
+} from "./signal";
 import { useUI } from "./store";
 export const COLORS = [
   "#67d5e7",
@@ -127,7 +132,10 @@ function Instrument({
     // ── Virtualized rendering — only process visible beacons ─────────────────
     // For large sessions (many beacons), culling to the frustum reduces GPU work.
     // Cast through unknown to convert THREE.Vector3 → tuple and to access fov.
-    const cam = camera as unknown as { position: [number, number, number]; fov: number };
+    const cam = camera as unknown as {
+      position: [number, number, number];
+      fov: number;
+    };
     const cameraDesc = useMemo(
       () => ({
         position: cam.position,
