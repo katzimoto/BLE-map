@@ -78,6 +78,28 @@ export type Fix = {
   reason: string;
   sensitivity: number | null;
 };
+
+function costAt(x: number, y: number, evidence: EvidenceItem[]) {
+  let c = 0;
+  for (const e of evidence) {
+    const log = Math.log10(Math.max(1, Math.hypot(x - e.r.x_m, y - e.r.y_m))),
+      v =
+        e.model.sigma ** 2 *
+        (1 + 1 / e.model.n + (log - e.model.mean) ** 2 / e.model.sxx),
+      z =
+        (e.model.reference - 10 * e.model.exponent * log - e.rssi) /
+        Math.sqrt(v);
+    c += Math.abs(z) <= 1.5 ? (z * z) / 2 : 1.5 * (Math.abs(z) - 0.75);
+  }
+  return c;
+}
+
+type EvidenceItem = {
+  r: Receiver;
+  model: Model;
+  interval: ReturnType<typeof distanceInterval>;
+  rssi: number;
+};
 export function locate(
   session: Session,
   selected: number,
@@ -130,50 +152,65 @@ export function locate(
       (b.x_m - a.x_m) * (c.y_m - a.y_m) - (c.x_m - a.x_m) * (b.y_m - a.y_m),
     );
   if (area < 3) return no("Receiver geometry is degenerate: no fix.");
-  let best = { x: 0, y: 0, cost: Infinity, variance: 0 };
+  let best = { x: 0, y: 0, cost: Infinity };
   for (let x = -18; x <= 18; x += 0.4)
     for (let y = -18; y <= 18; y += 0.4) {
-      let cost = 0,
-        variance = 0;
-      for (const e of evidence) {
-        const log = Math.log10(
-            Math.max(1, Math.hypot(x - e.r.x_m, y - e.r.y_m)),
-          ),
-          v =
-            e.model.sigma ** 2 *
-            (1 + 1 / e.model.n + (log - e.model.mean) ** 2 / e.model.sxx),
-          z =
-            (e.model.reference - 10 * e.model.exponent * log - e.rssi) /
-            Math.sqrt(v);
-        cost += Math.abs(z) <= 1.5 ? (z * z) / 2 : 1.5 * (Math.abs(z) - 0.75);
-        variance += v;
-      }
-      if (cost < best.cost) best = { x, y, cost, variance };
+      const c = costAt(x, y, evidence);
+      if (c < best.cost) best = { x, y, cost: c };
     }
   if (best.cost > 12) return no("Evidence and model disagree: no fix.");
   if (Math.abs(best.x) > 17.8 || Math.abs(best.y) > 17.8)
     return no("Estimate reaches the fictional search boundary: no fix.");
-  let xx = 0,
-    xy = 0,
-    yy = 0;
-  for (const e of evidence) {
-    const dx = best.x - e.r.x_m,
-      dy = best.y - e.r.y_m,
-      d2 = Math.max(1, dx * dx + dy * dy),
-      log = Math.log10(Math.sqrt(d2)),
-      v =
-        e.model.sigma ** 2 *
-        (1 + 1 / e.model.n + (log - e.model.mean) ** 2 / e.model.sxx),
-      factor = (-10 * e.model.exponent) / Math.LN10 / d2,
-      jx = factor * dx,
-      jy = factor * dy;
-    xx += (jx * jx) / v;
-    xy += (jx * jy) / v;
-    yy += (jy * jy) / v;
+
+  // Gauss–Newton refinement with backtracking line search
+  const currentCost = costAt(best.x, best.y, evidence);
+  let xx = 0, xy = 0, yy = 0;
+  for (let iter = 0; iter < 80; iter++) {
+    let gx = 0, gy = 0;
+    xx = 0; xy = 0; yy = 0;
+    for (const e of evidence) {
+      const dx = best.x - e.r.x_m,
+        dy = best.y - e.r.y_m,
+        d2 = Math.max(1, dx * dx + dy * dy),
+        log = Math.log10(Math.sqrt(d2)),
+        v =
+          e.model.sigma ** 2 *
+          (1 + 1 / e.model.n + (log - e.model.mean) ** 2 / e.model.sxx),
+        z =
+          (e.model.reference - 10 * e.model.exponent * log - e.rssi) /
+          Math.sqrt(v),
+        factor = (-10 * e.model.exponent) / Math.LN10 / d2,
+        jx = factor * dx,
+        jy = factor * dy;
+      // gradient
+      gx += (z / Math.sqrt(v)) * jx;
+      gy += (z / Math.sqrt(v)) * jy;
+      // Hessian approximation
+      xx += (jx * jx) / v;
+      xy += (jx * jy) / v;
+      yy += (jy * jy) / v;
+    }
+    const eigen = (xx + yy - Math.hypot(xx - yy, 2 * xy)) / 2;
+    if (eigen <= 1e-8) break;
+    const stepX = gx / xx,
+      stepY = gy / yy;
+    let rate = 1;
+    for (let k = 0; k < 16; k++, rate /= 2) {
+      if (costAt(best.x - rate * stepX, best.y - rate * stepY, evidence) < currentCost) {
+        best = {
+          x: best.x - rate * stepX,
+          y: best.y - rate * stepY,
+          cost: costAt(best.x - rate * stepX, best.y - rate * stepY, evidence),
+        };
+        break;
+      }
+    }
+    if (rate === 0) break; // no improvement found
   }
-  const eigen = (xx + yy - Math.hypot(xx - yy, 2 * xy)) / 2;
-  if (eigen <= 1e-8) return no("Position sensitivity is unresolved: no fix.");
-  const sensitivity = 1 / Math.sqrt(eigen);
+
+  const sensitivity = 1 / Math.sqrt((xx + yy - Math.hypot(xx - yy, 2 * xy)) / 2);
+  if (!Number.isFinite(sensitivity) || sensitivity <= 0)
+    return no("Position sensitivity is unresolved: no fix.");
   return {
     point: { x: best.x, y: best.y },
     reason:
