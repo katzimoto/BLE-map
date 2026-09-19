@@ -31,7 +31,10 @@ function getWorker(): Worker {
 function callWorker<T>(type: string, payload: unknown): Promise<T> {
   return new Promise((resolve, reject) => {
     const id = ++nextId;
-    const pending: Pending = { resolve: resolve as (value: unknown) => void, reject };
+    const pending: Pending = {
+      resolve: resolve as (value: unknown) => void,
+      reject,
+    };
     getWorker().postMessage({ id, type, payload });
     // Stash the handler keyed by id — cleaned up when the response arrives
     handlers.set(id, pending);
@@ -139,7 +142,11 @@ export function useObservationsWorker(
   return obs;
 }
 
-export function useHistogramWorker(session: Session, bins: number, binMs: number) {
+export function useHistogramWorker(
+  session: Session,
+  bins: number,
+  binMs: number,
+) {
   const [hist, setHist] = useState<number[] | null>(null);
 
   useEffect(() => {

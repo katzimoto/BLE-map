@@ -367,7 +367,7 @@ export interface CalibrationModel {
    */
   n: number;
   /**
-     * Sample mean of log10(distance) values.
+   * Sample mean of log10(distance) values.
    */
   mean_log_dist: number;
   /**
@@ -388,9 +388,7 @@ export interface CalibrationSample {
 }
 
 export type CalibrationMethod =
-  | "linear-regression-log-distance"
-  | "wls-log-distance"
-  | "robust-log-distance";
+  "linear-regression-log-distance" | "wls-log-distance" | "robust-log-distance";
 
 export interface CalibrationValidity {
   /**

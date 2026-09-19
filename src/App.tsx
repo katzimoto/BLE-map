@@ -73,11 +73,13 @@ function Timeline({ session }: { session: Session }) {
   const ui = useUI();
   // Use worker-computed histogram when available, fall back to main-thread computation
   const workerHist = useHistogramWorker(session, 96, 500);
-  const histogram = workerHist ?? useMemo(() => {
-    const h = new Array(96).fill(0);
-    session.t.forEach((t) => h[Math.min(95, Math.floor(t / 500))]++);
-    return h;
-  }, [session]);
+  const histogram =
+    workerHist ??
+    useMemo(() => {
+      const h = new Array(96).fill(0);
+      session.t.forEach((t) => h[Math.min(95, Math.floor(t / 500))]++);
+      return h;
+    }, [session]);
   const smoothWorker = useSmoothedWorker(session, ui.tau);
   const indices =
     ui.selected === null
@@ -86,19 +88,20 @@ function Timeline({ session }: { session: Session }) {
           (i) => session.receiver[i] === ui.receiver,
         );
   // Use worker-computed smoothed values for the polyline when available
-  const smooth = smoothWorker && indices.length > 0
-    ? indices
-        .map(
-          (i) =>
-            `${20 + (session.t[i] / 48000) * 960},${150 - ((smoothWorker[i] + 120) / 110) * 78}`,
-        )
-        .join(" ")
-    : indices
-        .map(
-          (i) =>
-            `${20 + (session.t[i] / 48000) * 960},${150 - ((session.rssi[i] + 120) / 110) * 78}`,
-        )
-        .join(" ");
+  const smooth =
+    smoothWorker && indices.length > 0
+      ? indices
+          .map(
+            (i) =>
+              `${20 + (session.t[i] / 48000) * 960},${150 - ((smoothWorker[i] + 120) / 110) * 78}`,
+          )
+          .join(" ")
+      : indices
+          .map(
+            (i) =>
+              `${20 + (session.t[i] / 48000) * 960},${150 - ((session.rssi[i] + 120) / 110) * 78}`,
+          )
+          .join(" ");
   const maximum = Math.max(...histogram),
     x = 20 + (ui.time / 48000) * 960;
   return (
@@ -468,7 +471,7 @@ export default function App() {
   );
   const selected = ui.selected === null ? null : obs[ui.selected];
   const beacon =
-      fixture && ui.selected !== null ? fixture.beacons[ui.selected] : null;
+    fixture && ui.selected !== null ? fixture.beacons[ui.selected] : null;
   const selectedIndices =
     session && ui.selected !== null
       ? Array.from(session.indices[ui.selected]).filter(
