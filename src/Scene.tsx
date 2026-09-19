@@ -119,6 +119,26 @@ function Instrument({
         48000,
         time.current + Math.max(0, delta) * 1000 * ui.speed,
       );
+
+    // ── Virtualized rendering: only process beacons whose 3-D position
+    //     projects into the visible screen region.  This keeps render cost
+    //     O(visible_beacons) regardless of total beacon count.
+    const { width, height } = size;
+    const PADDING = 40; // px — keep near-screen glyphs alive during fast pans
+    const visibleBeaconIndices: number[] = [];
+    for (let i = 0; i < session.fixture.beacons.length; i++) {
+      if (!session.fixture.beacons[i]!.label.toLowerCase().includes(ui.query.toLowerCase())) continue;
+      // Approximate 3-D position from direction + typical radius
+      const dir = direction(i);
+      const r = 1.5 + (10 * 110) / 110; // max possible radius ≈ 11.5 m
+      const world = new THREE.Vector3(dir[0] * r, dir[1] * r, dir[2] * r);
+      const projected = world.project(camera);
+      const sx = ((projected.x + 1) / 2) * width;
+      const sy = ((1 - projected.y) / 2) * height;
+      if (sx < -PADDING || sx > width + PADDING || sy < -PADDING || sy > height + PADDING) continue;
+      visibleBeaconIndices.push(i);
+    }
+
     const values = useMemo(
       () => observations(session, time.current, ui.receiver, ui.tau),
       [session, time.current, ui.receiver, ui.tau],
@@ -150,17 +170,9 @@ function Instrument({
 
     const ids: number[] = [];
     const attribute = lines.getAttribute("position") as THREE.BufferAttribute;
-    // Use the virtualized visible set instead of iterating all values
-    for (const i of visibleIds) {
+    visibleBeaconIndices.forEach((i) => {
       const obs = values[i];
-      if (
-        !obs ||
-        obs.alpha <= 0 ||
-        !session.fixture.beacons[i].label
-          .toLowerCase()
-          .includes(ui.query.toLowerCase())
-      )
-        continue;
+      if (!obs || obs.alpha <= 0) return;
       const slot = ids.length;
       ids.push(i);
       const dir = direction(i),
