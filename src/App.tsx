@@ -451,11 +451,12 @@ export default function App() {
       if (version === request.current) setLoading(false);
     }
   }
-  const obs = session
-      ? observations(session, ui.time, ui.receiver, ui.tau)
-      : [],
-    selected = ui.selected === null ? null : obs[ui.selected],
-    beacon =
+  const obs = useMemo(
+    () => (session ? observations(session, ui.time, ui.receiver, ui.tau) : []),
+    [session, ui.time, ui.receiver, ui.tau],
+  );
+  const selected = ui.selected === null ? null : obs[ui.selected];
+  const beacon =
       fixture && ui.selected !== null ? fixture.beacons[ui.selected] : null;
   const selectedIndices =
     session && ui.selected !== null

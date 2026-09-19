@@ -119,8 +119,11 @@ function Instrument({
         48000,
         time.current + Math.max(0, delta) * 1000 * ui.speed,
       );
-    const values = observations(session, time.current, ui.receiver, ui.tau),
-      ids: number[] = [];
+    const values = useMemo(
+      () => observations(session, time.current, ui.receiver, ui.tau),
+      [session, time.current, ui.receiver, ui.tau],
+    );
+    const ids: number[] = [];
     const attribute = lines.getAttribute("position") as THREE.BufferAttribute;
     values.forEach((obs, i) => {
       if (
