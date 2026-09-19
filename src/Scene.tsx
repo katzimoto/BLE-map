@@ -3,7 +3,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { Session } from "./data";
-import { direction, observations, radius } from "./signal";
+import { direction, observations, radius, visibleBeaconIndices } from "./signal";
 import { useUI } from "./store";
 export const COLORS = [
   "#67d5e7",
@@ -123,9 +123,36 @@ function Instrument({
       () => observations(session, time.current, ui.receiver, ui.tau),
       [session, time.current, ui.receiver, ui.tau],
     );
+
+    // ── Virtualized rendering — only process visible beacons ─────────────────
+    // For large sessions (many beacons), culling to the frustum reduces GPU work.
+    // Cast through unknown to convert THREE.Vector3 → tuple and to access fov.
+    const cam = camera as unknown as { position: [number, number, number]; fov: number };
+    const cameraDesc = useMemo(
+      () => ({
+        position: cam.position,
+        fov: cam.fov,
+      }),
+      [cam],
+    );
+    const visibleIds = useMemo(
+      () =>
+        visibleBeaconIndices(
+          session,
+          values,
+          cameraDesc,
+          size.width,
+          size.height,
+        ),
+      [session, values, cameraDesc, size.width, size.height],
+    );
+    // ─────────────────────────────────────────────────────────────────────────
+
     const ids: number[] = [];
     const attribute = lines.getAttribute("position") as THREE.BufferAttribute;
-    values.forEach((obs, i) => {
+    // Use the virtualized visible set instead of iterating all values
+    for (const i of visibleIds) {
+      const obs = values[i];
       if (
         !obs ||
         obs.alpha <= 0 ||
@@ -133,7 +160,7 @@ function Instrument({
           .toLowerCase()
           .includes(ui.query.toLowerCase())
       )
-        return;
+        continue;
       const slot = ids.length;
       ids.push(i);
       const dir = direction(i),
@@ -163,7 +190,7 @@ function Instrument({
       );
       attribute.setXYZ(slot * 2, 0, 0, 0);
       attribute.setXYZ(slot * 2 + 1, dir[0] * r, dir[1] * r, dir[2] * r);
-    });
+    }
     visible.current = ids;
     glyphs.current!.count = ids.length;
     rings.current!.count = ids.length;

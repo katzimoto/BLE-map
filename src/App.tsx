@@ -20,6 +20,7 @@ import {
 } from "./data";
 import type { Fixture, Manifest, Project, Receiver, Session } from "./data";
 import { observations, smoothed } from "./signal";
+import { useSmoothedWorker, useHistogramWorker } from "./hooks/useSignalWorker";
 import {
   calibrate,
   correctCounter,
@@ -69,25 +70,35 @@ function Fallback({ session }: { session: Session }) {
   );
 }
 function Timeline({ session }: { session: Session }) {
-  const ui = useUI(),
-    samples = useMemo(() => smoothed(session, ui.tau), [session, ui.tau]);
-  const histogram = useMemo(() => {
+  const ui = useUI();
+  // Use worker-computed histogram when available, fall back to main-thread computation
+  const workerHist = useHistogramWorker(session, 96, 500);
+  const histogram = workerHist ?? useMemo(() => {
     const h = new Array(96).fill(0);
     session.t.forEach((t) => h[Math.min(95, Math.floor(t / 500))]++);
     return h;
   }, [session]);
+  const smoothWorker = useSmoothedWorker(session, ui.tau);
   const indices =
     ui.selected === null
       ? []
       : Array.from(session.indices[ui.selected]).filter(
           (i) => session.receiver[i] === ui.receiver,
         );
-  const smooth = indices
-    .map(
-      (i) =>
-        `${20 + (session.t[i] / 48000) * 960},${150 - ((samples[i] + 120) / 110) * 78}`,
-    )
-    .join(" ");
+  // Use worker-computed smoothed values for the polyline when available
+  const smooth = smoothWorker && indices.length > 0
+    ? indices
+        .map(
+          (i) =>
+            `${20 + (session.t[i] / 48000) * 960},${150 - ((smoothWorker[i] + 120) / 110) * 78}`,
+        )
+        .join(" ")
+    : indices
+        .map(
+          (i) =>
+            `${20 + (session.t[i] / 48000) * 960},${150 - ((session.rssi[i] + 120) / 110) * 78}`,
+        )
+        .join(" ");
   const maximum = Math.max(...histogram),
     x = 20 + (ui.time / 48000) * 960;
   return (

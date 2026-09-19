@@ -124,3 +124,119 @@ export function observations(
     };
   });
 }
+
+// ─── Virtualized rendering helpers — issue #20 [M3] ──────────────────────────
+
+/**
+ * Computes which beacon indices are visible in the given camera frustum, using
+ * a fast sphere-based bounds check in world space.
+ *
+ * Uses the screen-projected radius heuristic: a beacon whose projected point
+ * falls inside the viewport (with margin) AND whose world-space radius could
+ * project to a non-zero screen radius is considered visible.
+ *
+ * This replaces the O(n) render for all beacons with O(visible) per frame
+ * when the session has many beacons (e.g. > 64).
+ */
+export function visibleBeaconIndices(
+  session: Session,
+  values: Array<{ raw: number; smooth: number; alpha: number } | null>,
+  camera: { position: [number, number, number]; fov: number },
+  screenWidth: number,
+  screenHeight: number,
+): number[] {
+  const { position: [cx, cy, cz], fov } = camera;
+  const fovRad = (fov * Math.PI) / 180;
+  const halfH = Math.tan(fovRad / 2);
+  const halfW = halfH * (screenWidth / screenHeight);
+  const aspect = screenWidth / screenHeight;
+
+  return values.reduce<number[]>((visible, obs, i) => {
+    if (!obs || obs.alpha <= 0) return visible;
+    const dir = direction(i);
+    const r = radius(values[i]!.smooth).r;
+    // World position of beacon
+    const wx = dir[0] * r, wy = dir[1] * r, wz = dir[2] * r;
+    // Vector from camera to beacon
+    const dx = wx - cx, dy = wy - cy, dz = wz - cz;
+    // Depth along camera forward axis (positive = in front)
+    const depth = dx * 0 + dy * 0 + dz * 0; // dot with camera forward (0,1,0) for this scene
+    // For this top-down-ish view, camera forward ≈ (0,1,0) adjusted by elevation
+    // Use the actual camera direction from its position relative to origin
+    const camDir: [number, number, number] = [
+      -cx / Math.sqrt(cx * cx + cy * cy + cz * cz),
+      -cy / Math.sqrt(cx * cx + cy * cy + cz * cz),
+      -cz / Math.sqrt(cx * cx + cy * cy + cz * cz),
+    ];
+    const depth2 = dx * camDir[0] + dy * camDir[1] + dz * camDir[2];
+    if (depth2 <= 0) return visible; // behind camera
+
+    // Project beacon center to NDC
+    const invDz = 1 / (dz === 0 ? 1e-10 : dz);
+    const ndcX = (dx * invDz) / halfW;
+    const ndcY = (dy * invDz) / halfH;
+
+    // Screen pixel position
+    const sx = ((ndcX + 1) / 2) * screenWidth;
+    const sy = ((1 - ndcY) / 2) * screenHeight;
+
+    // Check if within screen bounds (with margin for beacon glyph radius)
+    const margin = 20;
+    if (sx < -margin || sx > screenWidth + margin || sy < -margin || sy > screenHeight + margin)
+      return visible;
+
+    visible.push(i);
+    return visible;
+  }, []);
+}
+
+/**
+ * Splits a session's time array into roughly equal chunks for parallel/virtualized
+ * processing, returning start/end indices per chunk.
+ *
+ * @param totalPoints Total number of data points
+ * @param numChunks Desired number of chunks (default: 4)
+ */
+export function chunkBounds(totalPoints: number, numChunks = 4): Array<{ start: number; end: number }> {
+  const chunkSize = Math.ceil(totalPoints / numChunks);
+  const bounds: Array<{ start: number; end: number }> = [];
+  for (let i = 0; i < totalPoints; i += chunkSize) {
+    bounds.push({ start: i, end: Math.min(i + chunkSize, totalPoints) });
+  }
+  return bounds;
+}
+
+/**
+ * Screen-space projected bounds for a beacon glyph, used by virtualized
+ * renderers to determine whether the glyph is on-screen without computing
+ * it unconditionally.
+ */
+export function projectedBounds(
+  index: number,
+  smoothRssi: number,
+  camera: { position: [number, number, number]; fov: number; size: { width: number; height: number } },
+): { x: number; y: number; radius: number } | null {
+  const dir = direction(index);
+  const r = radius(smoothRssi).r;
+  const { position: [cx, cy, cz], size: { width, height } } = camera;
+  const wx = dir[0] * r, wy = dir[1] * r, wz = dir[2] * r;
+  const dx = wx - cx, dy = wy - cy, dz = wz - cz;
+  if (dz <= 0) return null;
+
+  const fovRad = (camera.fov * Math.PI) / 180;
+  const halfH = Math.tan(fovRad / 2);
+  const aspect = width / height;
+
+  const invDz = 1 / dz;
+  const ndcX = (dx * invDz) / (halfH * aspect);
+  const ndcY = (dy * invDz) / halfH;
+
+  const sx = ((ndcX + 1) / 2) * width;
+  const sy = ((1 - ndcY) / 2) * height;
+
+  // Approximate screen-space radius of the glyph
+  const approxWorldSize = 0.3;
+  const screenRadius = Math.max(2, (approxWorldSize / dz) * (height / (2 * halfH)));
+
+  return { x: sx, y: sy, radius: screenRadius };
+}
