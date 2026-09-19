@@ -252,7 +252,7 @@ class Gate:
                     self.findings["non-generator-observations"] += 1
             if suffix == ".geojson":
                 self.findings["unapproved-geographic-format"] += 1
-        except ValueError, yaml.YAMLError, csv.Error:
+        except (ValueError, yaml.YAMLError, csv.Error):
             self.findings["invalid-structured-document"] += 1
 
     def png(self, name, data, generated):
@@ -291,7 +291,7 @@ class Gate:
                 if not re.search(r"synthetic", ocr, re.I):
                     self.findings["missing-synthetic-image-marker"] += 1
                 self.inspected["ocr"] += 1
-        except ValueError, RuntimeError, OSError, struct.error:
+        except (ValueError, RuntimeError, OSError, struct.error):
             self.findings["image-inspection-failed"] += 1
 
     def scan(self, name, data, generated=False, depth=0):
@@ -338,7 +338,7 @@ class Gate:
                             if file is None:
                                 raise ValueError()
                             self.scan(entry.name, file.read(), generated, depth + 1)
-            except ValueError, OSError, tarfile.TarError, zipfile.BadZipFile:
+            except (ValueError, OSError, tarfile.TarError, zipfile.BadZipFile):
                 self.findings["unsafe-archive"] += 1
             return
         try:
