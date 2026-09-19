@@ -1,0 +1,48 @@
+name: Verify synthetic laboratory
+on:
+  push:
+    branches: [main, "bootstrap/**"]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch every advertised public ref
+        run: git fetch origin '+refs/*:refs/audit/*'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+          cache: npm
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.14"
+      - name: Install verification dependencies
+        run: |
+          npm ci
+          pip install -r requirements-dev.txt
+          sudo apt-get update -qq
+          sudo apt-get install -y tesseract-ocr libimage-exiftool-perl
+          python3 scripts/install_scanners.py --output "$RUNNER_TEMP/ble-map-scanners"
+          echo "$RUNNER_TEMP/ble-map-scanners" >> "$GITHUB_PATH"
+      - run: npx playwright install --with-deps chromium
+      - name: Run complete sanitized verification
+        run: python3 scripts/run_checks.py
+      - name: Scan final workflow artifacts
+        run: python3 scripts/privacy_gate.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: synthetic-review-material
+          path: review-output/
+          retention-days: 7
+          if-no-files-found: error

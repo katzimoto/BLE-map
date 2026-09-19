@@ -1,0 +1,59 @@
+{
+  "name": "ble-map-synthetic-lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "description": "Synthetic-only local BLE signal and receiver-layout laboratory",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/katzimoto/BLE-map.git"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite --host localhost",
+    "build": "npm run schemas && tsc -b && vite build",
+    "preview": "vite preview --host localhost",
+    "fixtures": "python3 scripts/generate_synthetic.py",
+    "fixtures:check": "python3 scripts/generate_synthetic.py --check",
+    "format": "prettier --write src tests *.ts *.js *.json *.html *.md docs .github",
+    "format:check": "prettier --check src tests *.ts *.js *.json *.html *.md docs .github",
+    "lint": "eslint src tests scripts/*.mjs *.ts *.js",
+    "test": "vitest run",
+    "test:integration": "python3 -m unittest discover -s scripts -p \"test_*.py\"",
+    "test:e2e": "playwright test",
+    "privacy": "python3 scripts/privacy_gate.py",
+    "audit:secrets": "python3 scripts/secret_scan.py",
+    "package:review": "python3 scripts/package_review.py",
+    "schemas": "node scripts/compile-schemas.mjs"
+  },
+  "dependencies": {
+    "@react-three/drei": "10.7.8",
+    "@react-three/fiber": "9.7.0",
+    "lucide-react": "1.42.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "three": "0.185.1",
+    "zustand": "5.0.15"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.63.0",
+    "@types/node": "26.5.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@types/three": "0.185.4",
+    "@vitejs/plugin-react": "6.1.1",
+    "ajv": "8.20.0",
+    "eslint": "10.10.0",
+    "pngjs": "7.0.0",
+    "prettier": "3.9.6",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.0",
+    "vite": "8.2.2",
+    "vitest": "5.0.0"
+  }
+}

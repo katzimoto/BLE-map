@@ -1,0 +1,270 @@
+{
+  "schema_version": 1,
+  "review_status": "awaiting-human-privacy-approval",
+  "files": [
+    {
+      "path": ".github/CODEOWNERS",
+      "origin": "clean-room"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/bug.yml",
+      "origin": "clean-room"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/config.yml",
+      "origin": "clean-room"
+    },
+    {
+      "path": ".github/PULL_REQUEST_TEMPLATE.md",
+      "origin": "clean-room"
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "origin": "clean-room"
+    },
+    {
+      "path": ".github/workflows/codeql.yml",
+      "origin": "clean-room"
+    },
+    {
+      "path": ".github/workflows/privacy.yml",
+      "origin": "clean-room"
+    },
+    {
+      "path": ".github/workflows/verify.yml",
+      "origin": "clean-room"
+    },
+    {
+      "path": ".gitignore",
+      "origin": "clean-room"
+    },
+    {
+      "path": ".nvmrc",
+      "origin": "clean-room"
+    },
+    {
+      "path": ".prettierignore",
+      "origin": "clean-room"
+    },
+    {
+      "path": ".privacy/assets.json",
+      "origin": "clean-room"
+    },
+    {
+      "path": ".privacy/files.json",
+      "origin": "clean-room"
+    },
+    {
+      "path": ".privacy/tools.json",
+      "origin": "clean-room"
+    },
+    {
+      "path": "CODE_OF_CONDUCT.md",
+      "origin": "clean-room"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "origin": "clean-room"
+    },
+    {
+      "path": "LICENSE",
+      "origin": "official-Apache-license"
+    },
+    {
+      "path": "README.md",
+      "origin": "clean-room"
+    },
+    {
+      "path": "SECURITY.md",
+      "origin": "clean-room"
+    },
+    {
+      "path": "SUPPORT.md",
+      "origin": "clean-room"
+    },
+    {
+      "path": "docs/api.md",
+      "origin": "clean-room"
+    },
+    {
+      "path": "docs/architecture.md",
+      "origin": "clean-room"
+    },
+    {
+      "path": "docs/data-semantics.md",
+      "origin": "clean-room"
+    },
+    {
+      "path": "docs/privacy.md",
+      "origin": "clean-room"
+    },
+    {
+      "path": "docs/screenshots/synthetic-desktop.png",
+      "origin": "synthetic-browser-render"
+    },
+    {
+      "path": "docs/screenshots/synthetic-mobile.png",
+      "origin": "synthetic-browser-render"
+    },
+    {
+      "path": "docs/verification.md",
+      "origin": "clean-room"
+    },
+    {
+      "path": "eslint.config.js",
+      "origin": "clean-room"
+    },
+    {
+      "path": "index.html",
+      "origin": "clean-room"
+    },
+    {
+      "path": "package-lock.json",
+      "origin": "fresh-dependency-resolution"
+    },
+    {
+      "path": "package.json",
+      "origin": "clean-room"
+    },
+    {
+      "path": "playwright.config.ts",
+      "origin": "clean-room"
+    },
+    {
+      "path": "public/fixture.schema.json",
+      "origin": "clean-room"
+    },
+    {
+      "path": "public/fixtures/clock-drift.json",
+      "origin": "synthetic-generator"
+    },
+    {
+      "path": "public/fixtures/collinear.json",
+      "origin": "synthetic-generator"
+    },
+    {
+      "path": "public/fixtures/manifest.json",
+      "origin": "synthetic-generator"
+    },
+    {
+      "path": "public/fixtures/sparse.json",
+      "origin": "synthetic-generator"
+    },
+    {
+      "path": "public/fixtures/triangle.json",
+      "origin": "synthetic-generator"
+    },
+    {
+      "path": "public/fixtures/weak-fit.json",
+      "origin": "synthetic-generator"
+    },
+    {
+      "path": "public/project.schema.json",
+      "origin": "clean-room"
+    },
+    {
+      "path": "pyproject.toml",
+      "origin": "clean-room"
+    },
+    {
+      "path": "requirements-dev.txt",
+      "origin": "fresh-dependency-resolution"
+    },
+    {
+      "path": "scripts/compile-schemas.mjs",
+      "origin": "clean-room"
+    },
+    {
+      "path": "scripts/generate_synthetic.py",
+      "origin": "clean-room"
+    },
+    {
+      "path": "scripts/install_scanners.py",
+      "origin": "clean-room"
+    },
+    {
+      "path": "scripts/package_review.py",
+      "origin": "clean-room"
+    },
+    {
+      "path": "scripts/privacy_gate.py",
+      "origin": "clean-room"
+    },
+    {
+      "path": "scripts/reproducible_build.py",
+      "origin": "clean-room"
+    },
+    {
+      "path": "scripts/run_checks.py",
+      "origin": "clean-room"
+    },
+    {
+      "path": "scripts/secret_scan.py",
+      "origin": "clean-room"
+    },
+    {
+      "path": "scripts/test_synthetic.py",
+      "origin": "clean-room"
+    },
+    {
+      "path": "src/App.tsx",
+      "origin": "clean-room"
+    },
+    {
+      "path": "src/Scene.tsx",
+      "origin": "clean-room"
+    },
+    {
+      "path": "src/data.ts",
+      "origin": "clean-room"
+    },
+    {
+      "path": "src/generated/validators.d.mts",
+      "origin": "schema-compiler"
+    },
+    {
+      "path": "src/generated/validators.mjs",
+      "origin": "schema-compiler"
+    },
+    {
+      "path": "src/lab.test.ts",
+      "origin": "clean-room"
+    },
+    {
+      "path": "src/localization.ts",
+      "origin": "clean-room"
+    },
+    {
+      "path": "src/main.tsx",
+      "origin": "clean-room"
+    },
+    {
+      "path": "src/signal.ts",
+      "origin": "clean-room"
+    },
+    {
+      "path": "src/storage.ts",
+      "origin": "clean-room"
+    },
+    {
+      "path": "src/store.ts",
+      "origin": "clean-room"
+    },
+    {
+      "path": "src/styles.css",
+      "origin": "clean-room"
+    },
+    {
+      "path": "tests/laboratory.spec.ts",
+      "origin": "clean-room"
+    },
+    {
+      "path": "tsconfig.json",
+      "origin": "clean-room"
+    },
+    {
+      "path": "vite.config.ts",
+      "origin": "clean-room"
+    }
+  ]
+}

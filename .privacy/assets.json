@@ -1,0 +1,20 @@
+{
+  "approved": [
+    {
+      "path": "docs/screenshots/synthetic-desktop.png",
+      "sha256": "10e9f0215db75651089d425edd9f5b1c7c508082c1939fbcb9838a1350e9f191",
+      "synthetic": true,
+      "recipe": "Playwright desktop viewport; triangle scenario at relative 12 seconds",
+      "width": 1440,
+      "height": 1291
+    },
+    {
+      "path": "docs/screenshots/synthetic-mobile.png",
+      "sha256": "088b0c3703badca225a002e9f6d130fcc6c596b5a5f18a0b0c2811a56b8755a6",
+      "synthetic": true,
+      "recipe": "Playwright mobile viewport; triangle scenario at relative 12 seconds",
+      "width": 390,
+      "height": 2269
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "schema_version",
+    "synthetic",
+    "fixture",
+    "view"
+  ],
+  "properties": {
+    "kind": {
+      "const": "synthetic-ble-project"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "synthetic": {
+      "const": true
+    },
+    "fixture": {
+      "$ref": "fixture.schema.json"
+    },
+    "view": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "time_ms",
+        "selected",
+        "tau",
+        "positions",
+        "clock_corrected"
+      ],
+      "properties": {
+        "time_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 48000
+        },
+        "selected": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tau": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 3
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "x_m",
+              "y_m"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^example-receiver-[a-c]$",
+                "maxLength": 80
+              },
+              "x_m": {
+                "type": "number",
+                "minimum": -100,
+                "maximum": 100
+              },
+              "y_m": {
+                "type": "number",
+                "minimum": -100,
+                "maximum": 100
+              }
+            }
+          },
+          "minItems": 2,
+          "maxItems": 3
+        },
+        "clock_corrected": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
