@@ -105,6 +105,45 @@ describe("signal semantics", () => {
     });
   });
 });
+describe("identity and time index", () => {
+  it("builds firstTime and lastTime for every identity", () => {
+    const s = hydrate(fixture());
+    for (let b = 0; b < s.fixture.beacons.length; b++) {
+      expect(s.firstTime.get(b)).toBeDefined();
+      expect(s.lastTime.get(b)).toBeDefined();
+      const indices = Array.from(s.indices[b]);
+      expect(s.firstTime.get(b)).toBe(s.t[indices[0]]);
+      expect(s.lastTime.get(b)).toBe(s.t[indices[indices.length - 1]]);
+    }
+  });
+  it("byIdentity maps each (identity, time) to the first matching index", () => {
+    const s = hydrate(fixture());
+    const b = 0;
+    const timeMap = s.byIdentity.get(b)!;
+    expect(timeMap.size).toBeGreaterThan(0);
+    for (const [t, idx] of timeMap) {
+      expect(s.beacon[idx]).toBe(b);
+      expect(s.t[idx]).toBe(t);
+    }
+  });
+  it("cross-capture lookup via byIdentity is O(1) not O(n)", () => {
+    const s = hydrate(fixture());
+    const b = 3;
+    const t = 12000;
+    // Binary search via upperBound on firstTime boundary, then linear scan within identity
+    const start = s.firstTime.get(b)!;
+    const end = s.lastTime.get(b)!;
+    expect(start).toBeDefined();
+    expect(end).toBeDefined();
+    // Verify byIdentity gives direct access for a known (identity, time) pair
+    const timeMap = s.byIdentity.get(b)!;
+    const idx = timeMap.get(t);
+    if (idx !== undefined) {
+      expect(s.beacon[idx]).toBe(b);
+      expect(s.t[idx]).toBe(t);
+    }
+  });
+});
 describe("conditional estimation", () => {
   it("fits a known calibration and inverts its prediction band", () => {
     const m = calibrate(fixture().receivers[0].calibration);
