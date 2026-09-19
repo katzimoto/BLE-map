@@ -1,5 +1,31 @@
 import type { Manifest, Project } from "./data";
 import { validateProject } from "./data";
+
+const SCHEMA_VERSION = 2;
+const DB_NAME = "synthetic-ble-lab";
+
+function database(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, SCHEMA_VERSION);
+    request.onerror = () => reject(new Error("Browser storage unavailable."));
+    request.onsuccess = () => resolve(request.result);
+    request.onupgradeneeded = (event) => {
+      const db = (event.target as IDBOpenDBRequest).result;
+      // Version 1: initial schema with only 'projects' store
+      if (!db.objectStoreNames.contains("projects")) {
+        db.createObjectStore("projects");
+      }
+      // Version 2: add 'meta' store for schema version and last-saved timestamp
+      if (!db.objectStoreNames.contains("meta")) {
+        db.createObjectStore("meta", { keyPath: "key" });
+        const meta = db.transaction("meta", "readwrite").objectStore("meta");
+        meta.put({ key: "schema_version", value: SCHEMA_VERSION });
+        meta.put({ key: "last_saved", value: null });
+      }
+    };
+  });
+}
+
 export async function durability(request = false) {
   const s = navigator.storage;
   if (!s?.persisted)
@@ -16,22 +42,17 @@ export async function durability(request = false) {
     return "Persistence could not be checked; keep an exported project.";
   }
 }
-function database(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open("synthetic-ble-lab", 1);
-    request.onupgradeneeded = () =>
-      request.result.createObjectStore("projects");
-    request.onerror = () => reject(new Error("Browser storage unavailable."));
-    request.onsuccess = () => resolve(request.result);
-  });
-}
+
 export async function saveProject(project: Project) {
   const status = await durability(true),
     db = await database();
   try {
     await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction("projects", "readwrite");
+      const tx = db.transaction(["projects", "meta"], "readwrite");
       tx.objectStore("projects").put(project, "current");
+      tx.objectStore("meta").put(
+        { key: "last_saved", value: Date.now() },
+      );
       tx.oncomplete = () => resolve();
       tx.onabort = tx.onerror = () =>
         reject(new Error("Project save failed; export a backup."));
@@ -41,6 +62,7 @@ export async function saveProject(project: Project) {
     db.close();
   }
 }
+
 export async function loadProject(manifest: Manifest) {
   const db = await database();
   try {
@@ -50,8 +72,78 @@ export async function loadProject(manifest: Manifest) {
       r.onsuccess = () => resolve(r.result);
       r.onerror = () => reject(new Error("Project read failed."));
     });
-    return value ? validateProject(value, manifest) : null;
+    if (!value) return null;
+    return validateProject(value, manifest);
   } finally {
     db.close();
   }
+}
+
+export async function getLastSaved(): Promise<number | null> {
+  const db = await database();
+  try {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction("meta", "readonly"),
+        r = tx.objectStore("meta").get("last_saved");
+      r.onsuccess = () => resolve(r.result?.value ?? null);
+      r.onerror = () => reject(new Error("Meta read failed."));
+    });
+  } finally {
+    db.close();
+  }
+}
+
+export async function getSchemaVersion(): Promise<number | null> {
+  const db = await database();
+  try {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction("meta", "readonly"),
+        r = tx.objectStore("meta").get("schema_version");
+      r.onsuccess = () => resolve(r.result?.value ?? null);
+      r.onerror = () => reject(new Error("Meta read failed."));
+    });
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Attempt structured recovery from a corrupted or unreadable stored project.
+ * Returns null if recovery is not possible or the data is not a valid project.
+ */
+export async function recoverProject(
+  manifest: Manifest,
+): Promise<Project | null> {
+  const db = await database();
+  try {
+    // Try to read with a fresh transaction; if the stored data is somehow
+    // partial it may still be loadable via validateProject.
+    const raw = await new Promise<unknown>((resolve, reject) => {
+      const tx = db.transaction("projects", "readonly"),
+        r = tx.objectStore("projects").get("current");
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(new Error("Recovery read failed."));
+    });
+    if (!raw) return null;
+    try {
+      return validateProject(raw, manifest);
+    } catch {
+      return null;
+    }
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Clear all stored data and reset schema to current version.
+ * Use only when recovery has failed and the user has confirmed data loss.
+ */
+export async function resetStorage(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.deleteDatabase(DB_NAME);
+    request.onsuccess = () => resolve();
+    request.onerror = () =>
+      reject(new Error("Storage reset failed; the browser may deny access."));
+  });
 }

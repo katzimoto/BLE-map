@@ -26,7 +26,7 @@ import {
   distanceInterval,
   locate,
 } from "./localization";
-import { durability, loadProject, saveProject } from "./storage";
+import { durability, getLastSaved, loadProject, recoverProject, resetStorage, saveProject } from "./storage";
 import { useUI } from "./store";
 import { COLORS, SignalScene } from "./Scene";
 class SceneBoundary extends Component<
@@ -329,7 +329,8 @@ export default function App() {
     [mode, setMode] = useState<"signal" | "layout">("signal"),
     [corrected, setCorrected] = useState(true),
     [loading, setLoading] = useState(false),
-    [storage, setStorage] = useState("Checking browser storage…");
+    [storage, setStorage] = useState("Checking browser storage…"),
+    [lastSaved, setLastSaved] = useState<number | null>(null);
   const request = useRef(0),
     ui = useUI(),
     session = useMemo(() => (fixture ? hydrate(fixture) : null), [fixture]);
@@ -373,8 +374,29 @@ export default function App() {
           if (saved && !cancelled) {
             apply(saved);
             setStatus("Restored saved synthetic project.");
+          } else {
+            // No saved project; try recovery in case a prior load partially failed.
+            try {
+              const recovered = await recoverProject(m);
+              if (recovered && !cancelled) {
+                apply(recovered);
+                setStatus(
+                  "Recovered a stored synthetic project after a load error.",
+                );
+              }
+            } catch {
+              // Recovery not possible; fresh start is fine.
+            }
+          }
+          // Populate last-saved timestamp whether or not a project was loaded.
+          try {
+            const ts = await getLastSaved();
+            if (!cancelled) setLastSaved(ts);
+          } catch {
+            // Timestamp unavailable; ignore.
           }
         } catch {
+          // Storage unavailable; continue without it.
           setStorage("Browser storage is unavailable; use project exports.");
         }
       } catch {
@@ -841,6 +863,12 @@ export default function App() {
             <div>
               <h2>Synthetic project</h2>
               <p>{storage}</p>
+              {lastSaved !== null && (
+                <p className="muted">
+                  Last saved:{" "}
+                  {new Date(lastSaved).toLocaleString()}
+                </p>
+              )}
             </div>
             <button onClick={() => download(snapshot())}>
               <Download size={15} />
@@ -849,7 +877,9 @@ export default function App() {
             <button
               onClick={async () => {
                 try {
-                  setStorage(await saveProject(snapshot()));
+                  const result = await saveProject(snapshot());
+                  setStorage(result);
+                  setLastSaved(Date.now());
                   setStatus("Synthetic project saved in this browser.");
                 } catch {
                   setError("Could not save locally. Export a project backup.");
@@ -939,7 +969,9 @@ export default function App() {
                 onClick={async () => {
                   try {
                     download(snapshot());
-                    setStorage(await saveProject(pending));
+                    const result = await saveProject(pending);
+                    setStorage(result);
+                    setLastSaved(Date.now());
                     apply(pending);
                     setPending(null);
                     setStatus(
