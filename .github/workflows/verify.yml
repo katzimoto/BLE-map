@@ -36,6 +36,10 @@ jobs:
           python3 scripts/install_scanners.py --output "$RUNNER_TEMP/ble-map-scanners"
           echo "$RUNNER_TEMP/ble-map-scanners" >> "$GITHUB_PATH"
       - run: npx playwright install --with-deps chromium
+      - name: Lint TypeScript and JavaScript
+        run: npm run lint
+      - name: Audit JavaScript dependencies
+        run: npm audit --audit-level=moderate
       - name: Run complete sanitized verification
         run: python3 scripts/run_checks.py
       - name: Scan final workflow artifacts
