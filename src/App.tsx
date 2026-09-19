@@ -19,7 +19,7 @@ import {
   validateProject,
 } from "./data";
 import type { Fixture, Manifest, Project, Receiver, Session } from "./data";
-import { observations, smoothed } from "./signal";
+import { observations } from "./signal";
 import { useSmoothedWorker, useHistogramWorker } from "./hooks/useSignalWorker";
 import {
   calibrate,

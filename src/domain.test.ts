@@ -6,7 +6,6 @@ import {
   Scanner,
   ClockDomain,
   CalibrationProfile,
-  CalibrationSample,
   MapSpace,
   PositionEstimate,
   PositionBackend,

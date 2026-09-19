@@ -35,7 +35,7 @@ function evictSession() {
   if (oldest) outer.delete(oldest);
 }
 
-function touchTau(inner: Map<number, CachedTau>, tau: number) {
+function _touchTau(_inner: Map<number, CachedTau>, _tau: number) {
   // Move to end — done implicitly by re-inserting on next access (Map maintains
   // insertion order; we emulate LRU by re-adding on read miss)
   // For tau-level LRU we maintain per-session insertion order via the inner map.
@@ -149,7 +149,7 @@ export function visibleBeaconIndices(
   const fovRad = (fov * Math.PI) / 180;
   const halfH = Math.tan(fovRad / 2);
   const halfW = halfH * (screenWidth / screenHeight);
-  const aspect = screenWidth / screenHeight;
+  const _aspect = screenWidth / screenHeight;
 
   return values.reduce<number[]>((visible, obs, i) => {
     if (!obs || obs.alpha <= 0) return visible;
@@ -160,7 +160,7 @@ export function visibleBeaconIndices(
     // Vector from camera to beacon
     const dx = wx - cx, dy = wy - cy, dz = wz - cz;
     // Depth along camera forward axis (positive = in front)
-    const depth = dx * 0 + dy * 0 + dz * 0; // dot with camera forward (0,1,0) for this scene
+    const _depth = dx * 0 + dy * 0 + dz * 0; // dot with camera forward (0,1,0) for this scene
     // For this top-down-ish view, camera forward ≈ (0,1,0) adjusted by elevation
     // Use the actual camera direction from its position relative to origin
     const camDir: [number, number, number] = [
