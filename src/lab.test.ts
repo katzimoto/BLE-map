@@ -9,7 +9,7 @@ import {
   canonical,
 } from "./data";
 import type { Fixture, Manifest, Project } from "./data";
-import { direction, ema, opacity, radius, observations } from "./signal";
+import { direction, ema, opacity, radius, observations, outer, smoothed } from "./signal";
 import {
   calibrate,
   correctCounter,
@@ -88,6 +88,28 @@ describe("signal semantics", () => {
     expect(opacity(2000)).toBe(1);
     expect(opacity(7999)).toBeGreaterThan(0);
     expect(opacity(8000)).toBe(0);
+  });
+  it("LRU cache evicts oldest session after MAX_SESSIONS entries", () => {
+    const ids = ["triangle", "clock-drift", "collinear", "sparse", "weak-fit"] as const;
+    const sessions = Array.from({ length: 9 }, (_, i) =>
+      hydrate(fixture(ids[i % 5])),
+    );
+    // Fill the cache with 9 sessions (MAX_SESSIONS = 8)
+    for (const s of sessions) smoothed(s, 0.7);
+    // The oldest should have been evicted; only 8 remain
+    // sessions[0] was evicted — its tau map is gone
+    expect(outer.size).toBeLessThanOrEqual(8);
+  });
+  it("LRU cache evicts least-recently-used tau within a session", () => {
+    const s = hydrate(fixture());
+    // Fill 11 tau values (MAX_TAU = 10)
+    const taus = Array.from({ length: 11 }, (_, i) => 0.1 + i * 0.1);
+    for (const tau of taus) smoothed(s, tau);
+    // Access 0.7 to make it most-recent; 0.1 should be LRU and evicted
+    smoothed(s, 0.7);
+    smoothed(s, 1.5); // 1.5 is now LRU, 0.1 gone
+    const inner = outer.get(s)!;
+    expect(inner.has(0.1)).toBe(false);
   });
   it("keeps assigned directions and selected state stable through seeks", () => {
     const initial = direction(3),
