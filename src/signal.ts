@@ -21,10 +21,21 @@ export function direction(index: number): [number, number, number] {
   ];
 }
 const cache = new WeakMap<Session, Map<number, Float32Array>>();
+const MAX_TAU_PER_SESSION = 20;
 export function smoothed(s: Session, tau: number) {
-  let values = cache.get(s)?.get(tau);
-  if (values) return values;
-  values = new Float32Array(s.t.length);
+  let sessionMap = cache.get(s);
+  if (!sessionMap) {
+    sessionMap = new Map();
+    cache.set(s, sessionMap);
+  } else {
+    const hit = sessionMap.get(tau);
+    if (hit) return hit;
+  }
+  if (sessionMap.size >= MAX_TAU_PER_SESSION) {
+    const firstKey = sessionMap.keys().next().value as number | undefined;
+    if (firstKey !== undefined) sessionMap.delete(firstKey);
+  }
+  const values = new Float32Array(s.t.length);
   const last = new Map<string, number>();
   for (let i = 0; i < s.t.length; i++) {
     const key = s.beacon[i] + "/" + s.receiver[i],
@@ -35,7 +46,7 @@ export function smoothed(s: Session, tau: number) {
         : ema(values[p], s.rssi[p], (s.t[i] - s.t[p]) / 1000, tau);
     last.set(key, i);
   }
-  cache.set(s, new Map([[tau, values]]));
+  sessionMap.set(tau, values);
   return values;
 }
 export function observations(
