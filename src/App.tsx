@@ -365,7 +365,9 @@ export default function App() {
         setManifest(m);
         setFixture(f);
         setReceivers(f.receivers);
-        setStorage(await durability());
+        // Request persistent storage before the first capture import so the
+        // browser cannot evict the capture library stored in IndexedDB.
+        setStorage(await durability(true));
         try {
           const saved = await loadProject(m);
           if (saved && !cancelled) {
