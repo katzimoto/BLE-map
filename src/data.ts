@@ -146,10 +146,27 @@ export type Session = {
   beacon: Uint8Array;
   receiver: Uint8Array;
   indices: Uint32Array[];
+  /** identity → (time → first matching index), built once at hydration */
+  byIdentity: Map<number, Map<number, number>>;
+  /** identity → time of first event */
+  firstTime: Map<number, number>;
+  /** identity → time of last event */
+  lastTime: Map<number, number>;
 };
 export function hydrate(f: Fixture): Session {
   const indices: number[][] = f.beacons.map(() => []);
-  f.events.beacon.forEach((b, i) => indices[b].push(i));
+  const firstTime = new Map<number, number>();
+  const lastTime = new Map<number, number>();
+  const byIdentity = new Map<number, Map<number, number>>();
+  f.events.t.forEach((t, i) => {
+    const b = f.events.beacon[i];
+    indices[b].push(i);
+    if (!firstTime.has(b)) firstTime.set(b, t);
+    lastTime.set(b, t);
+    if (!byIdentity.has(b)) byIdentity.set(b, new Map());
+    // time → first occurrence for this identity (times are nondecreasing)
+    if (!byIdentity.get(b)!.has(t)) byIdentity.get(b)!.set(t, i);
+  });
   return {
     fixture: f,
     t: Uint32Array.from(f.events.t),
@@ -157,6 +174,9 @@ export function hydrate(f: Fixture): Session {
     beacon: Uint8Array.from(f.events.beacon),
     receiver: Uint8Array.from(f.events.receiver),
     indices: indices.map((a) => Uint32Array.from(a)),
+    byIdentity,
+    firstTime,
+    lastTime,
   };
 }
 export function upperBound(a: ArrayLike<number>, value: number): number {
