@@ -12,3 +12,11 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # setup-node v7 enforces Node 20 which is deprecated on GitHub runners (now Node 24)
+      # Keep on v4 (pinned hash) which works with Node 24
+      - dependency-name: actions/setup-node
+        update-types: [version-update:semver-major]
+      # codeql-action v4 is breaking CI on this repo
+      - dependency-name: github/codeql-action
+        update-types: [version-update:semver-major]
