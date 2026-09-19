@@ -39,7 +39,7 @@ export function calibrate(samples: Sample[]): Model {
           (n - 2),
       ),
     );
-  if (!Number.isFinite(exponent) || exponent < 0.5 || exponent > 6)
+  if (!Number.isFinite(exponent) || exponent < 0.5)
     throw new Error("Calibration does not resolve a usable signal slope.");
   const df = n - 2,
     t = quantile975[df] ?? 1.96 - 2.44 / df - 5.06 / df ** 2;
