@@ -42,17 +42,17 @@ export function calibrate(samples: Sample[]): Model {
   if (!Number.isFinite(exponent) || exponent < 0.5 || exponent > 6)
     throw new Error("Calibration does not resolve a usable signal slope.");
   const df = n - 2,
-    t = quantile975[df] ?? 1.96 + 2.3723 / df + 2.8225 / df ** 2;
+    t = quantile975[df] ?? 1.96 - 2.44 / df - 5.06 / df ** 2;
   return { reference, exponent, sigma, n, mean, sxx, t };
 }
 export function distanceInterval(rssi: number, m: Model) {
-  const beta = -10 * m.exponent,
-    delta = rssi - (m.reference + beta * m.mean),
-    h2 = (m.t * m.sigma) ** 2;
-  const a = beta * beta - h2 / m.sxx,
-    b = -2 * beta * delta,
-    c = delta * delta - h2 * (1 + 1 / m.n),
-    disc = b * b - 4 * a * c;
+  const beta = -10 * m.exponent;
+  const delta = rssi - (m.reference + beta * m.mean);
+  const h2 = ((m.t * m.sigma) ** 2) * (1 + 1 / m.n);
+  const a = beta * beta - h2 / m.sxx;
+  const b = -2 * beta * delta;
+  const c = delta * delta - h2;
+  const disc = b * b - 4 * a * c;
   if (a <= 0 || disc < 0)
     return {
       point: null,
