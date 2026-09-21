@@ -153,6 +153,58 @@ export type Session = {
   /** identity → time of last event */
   lastTime: Map<number, number>;
 };
+
+/** Flat (transfer-friendly) representation of a Session for the Web Worker. */
+export type SessionDescriptor = {
+  t: Uint32Array;
+  rssi: Int8Array;
+  beacon: Uint8Array;
+  receiver: Uint8Array;
+  indices: Uint32Array[];
+  /** beacon → (time → first index), encoded as flat [beacon, time, index, ...] */
+  byIdentityFlat: number[];
+  /** beacon → first event time, encoded as flat [beacon, time, ...] */
+  firstTimeFlat: number[];
+  /** beacon → last event time, encoded as flat [beacon, time, ...] */
+  lastTimeFlat: number[];
+  receiverCount: number;
+};
+
+/**
+ * Serialize a Session into a flat, worker-safe descriptor.
+ * The typed arrays are NOT copied — they are transferred (zero-copy).
+ * The Map structures are encoded as sorted flat arrays for fast iteration.
+ */
+export function toDescriptor(s: Session): SessionDescriptor {
+  const byIdentityFlat: number[] = [];
+  for (const [beacon, timeMap] of s.byIdentity) {
+    for (const [time, index] of timeMap) {
+      byIdentityFlat.push(beacon, time, index);
+    }
+  }
+
+  const firstTimeFlat: number[] = [];
+  for (const [beacon, time] of s.firstTime) {
+    firstTimeFlat.push(beacon, time);
+  }
+
+  const lastTimeFlat: number[] = [];
+  for (const [beacon, time] of s.lastTime) {
+    lastTimeFlat.push(beacon, time);
+  }
+
+  return {
+    t: s.t,
+    rssi: s.rssi,
+    beacon: s.beacon,
+    receiver: s.receiver,
+    indices: s.indices,
+    byIdentityFlat,
+    firstTimeFlat,
+    lastTimeFlat,
+    receiverCount: s.fixture.receivers.length,
+  };
+}
 export function hydrate(f: Fixture): Session {
   const indices: number[][] = f.beacons.map(() => []);
   const firstTime = new Map<number, number>();
